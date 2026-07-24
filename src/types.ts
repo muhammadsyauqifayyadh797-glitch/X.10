@@ -23,7 +23,7 @@ export interface AttendanceRecord {
 
 export type UserRole = 'student' | 'admin' | null;
 
-export type AdminRoleType = 'wali_kelas' | 'ketua_kelas' | null;
+export type AdminRoleType = 'wali_kelas' | 'ketua_kelas' | 'ketua_kebersihan' | null;
 
 export interface AdminUser {
   roleType: AdminRoleType;

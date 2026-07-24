@@ -3,6 +3,7 @@ import { Calendar, CheckSquare, Camera, Send, ShieldCheck, Sparkles, UserCheck, 
 import { DayOfWeek, Student, AttendanceRecord } from '../types';
 import { SCHEDULE_X10, API_URL } from '../data/piketSchedule';
 import { CameraCapture } from './CameraCapture';
+import { ClassFooter } from './ClassFooter';
 import confetti from 'canvas-confetti';
 
 interface StudentDashboardProps {
@@ -187,10 +188,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             X.10
           </div>
           <div>
-            <h1 className="text-sm font-extrabold text-slate-100 tracking-wide">Absensi Piket Kelas</h1>
-            <p className="text-[11px] text-cyan-400 font-semibold flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-              Siswa HP Android
+            <h1 className="text-xs font-bold text-cyan-300 tracking-wide uppercase">MAN 1 Kota Makassar</h1>
+            <p className="text-sm font-black text-slate-100 flex items-center gap-1.5">
+              <span>Absensi Piket Kelas X.10</span>
             </p>
           </div>
         </div>
@@ -211,9 +211,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           <Calendar className="w-3.5 h-3.5" />
           {getFormattedDate()}
         </p>
-        <h2 className="text-xl font-black text-slate-100 ocean-text-gradient mb-1">
+        <h2 className="text-xl font-black text-slate-100 ocean-text-gradient mb-0.5">
           Jadwal Piket Kebersihan X.10
         </h2>
+        <p className="text-xs text-cyan-200 font-bold mb-1">
+          MAN 1 Kota Makassar
+        </p>
         <p className="text-xs text-slate-300">
           Pastikan foto bukti piket jelas &amp; nama terdata di sistem
         </p>
@@ -471,6 +474,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Footer Info */}
+      <ClassFooter />
     </div>
   );
 };

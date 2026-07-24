@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, CheckCircle2, XCircle, Trash2, Mail, Calendar, FileText, Info, LogOut, Search, Eye, AlertTriangle, RefreshCw, Sparkles, Filter } from 'lucide-react';
 import { AttendanceRecord, ApprovalStatus, DayOfWeek } from '../types';
 import { API_URL } from '../data/piketSchedule';
+import { ClassFooter } from './ClassFooter';
 
 interface AdminDashboardProps {
   adminName: string;
@@ -94,10 +95,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
           <div>
-            <h1 className="text-sm font-black text-slate-100 tracking-wide truncate max-w-[180px]">{adminName}</h1>
+            <h1 className="text-sm font-black text-slate-100 tracking-wide truncate max-w-[200px]">{adminName}</h1>
             <p className="text-[11px] text-cyan-400 font-semibold flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              {adminTitle}
+              <span>{adminTitle}</span>
+              <span className="text-[10px] text-cyan-300 font-bold">· MAN 1 Kota Makassar</span>
             </p>
           </div>
         </div>
@@ -404,6 +406,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Footer Info */}
+      <ClassFooter />
     </div>
   );
 };

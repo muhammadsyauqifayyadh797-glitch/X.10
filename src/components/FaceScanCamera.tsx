@@ -26,7 +26,21 @@ export const FaceScanCamera: React.FC<FaceScanCameraProps> = ({
 
   const targetName = roleType === 'wali_kelas' 
     ? ADMIN_CREDENTIALS.waliKelasName 
-    : ADMIN_CREDENTIALS.ketuaKelasName;
+    : roleType === 'ketua_kelas'
+    ? ADMIN_CREDENTIALS.ketuaKelasName
+    : ADMIN_CREDENTIALS.ketuaKebersihanName;
+
+  const roleLabel = roleType === 'wali_kelas' 
+    ? 'Wali Kelas' 
+    : roleType === 'ketua_kelas'
+    ? 'Ketua Kelas'
+    : 'Ketua Kebersihan';
+
+  const roleBadge = roleType === 'wali_kelas' 
+    ? 'WK' 
+    : roleType === 'ketua_kelas'
+    ? 'KK'
+    : 'KB';
 
   // Initialize Camera
   useEffect(() => {
@@ -163,12 +177,12 @@ export const FaceScanCamera: React.FC<FaceScanCameraProps> = ({
         setScanProgress(progressCounter);
 
         if (progressCounter < 40) {
-          setFeedbackMsg(`Memverifikasi Vektor Wajah ${roleType === 'wali_kelas' ? 'Wali Kelas' : 'Ketua Kelas'}...`);
+          setFeedbackMsg(`Memverifikasi Vektor Wajah ${roleLabel}...`);
         } else if (progressCounter < 80) {
           setFeedbackMsg('Analisis Struktur Biometrik & Pupil Mata...');
         } else if (progressCounter >= 100) {
           setScanningStatus('passed');
-          setFeedbackMsg(`Verifikasi Sukses! Selamat Datang ${roleType === 'wali_kelas' ? 'Pak Wali Kelas' : 'Ketua Kelas (Syauqi)'}!`);
+          setFeedbackMsg(`Verifikasi Sukses! Selamat Datang ${roleLabel} (${targetName})!`);
           setTimeout(() => {
             if (streamRef.current) {
               streamRef.current.getTracks().forEach(track => track.stop());
@@ -211,7 +225,7 @@ export const FaceScanCamera: React.FC<FaceScanCameraProps> = ({
             <div className="text-left">
               <h3 className="font-bold text-slate-100 text-sm">Biometric Face ID</h3>
               <p className="text-xs text-cyan-300 font-medium">
-                {roleType === 'wali_kelas' ? 'Wali Kelas' : 'Ketua Kelas'}
+                {roleLabel}
               </p>
             </div>
           </div>
@@ -229,7 +243,7 @@ export const FaceScanCamera: React.FC<FaceScanCameraProps> = ({
         {/* Target Admin Card */}
         <div className="mb-4 p-2.5 rounded-2xl bg-cyan-950/60 border border-cyan-500/20 flex items-center gap-3 text-left">
           <div className="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 font-bold text-sm">
-            {roleType === 'wali_kelas' ? 'WK' : 'KK'}
+            {roleBadge}
           </div>
           <div>
             <p className="text-[11px] text-cyan-400 font-semibold tracking-wider uppercase">Verifikasi Wajah Untuk:</p>

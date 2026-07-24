@@ -57,6 +57,8 @@ export const SCHEDULE_X10: Record<DayOfWeek, Student[]> = {
 export const ADMIN_CREDENTIALS = {
   studentPassword: 'X.10Bersih',
   adminPassword: 'X.10Pakervan',
-  waliKelasName: 'Pak Ervan Ramli, S.H., Gr. (Wali Kelas X.10)',
-  ketuaKelasName: 'Muhammad Syauqi Fayyadh (Ketua Kelas)'
+  ketuaKebersihanPassword: 'X.10Kebersihan',
+  waliKelasName: 'Pak Ervan Ramli, S.H., Gr.',
+  ketuaKelasName: 'Muhammad Syauqi Fayyadh',
+  ketuaKebersihanName: 'Ketua Kebersihan (Kelas X.10)'
 };

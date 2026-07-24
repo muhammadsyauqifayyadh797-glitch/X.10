@@ -3,6 +3,7 @@ import { ShieldCheck, KeyRound, Eye, EyeOff, CheckCircle2, Lock, User, Camera, X
 import { AdminRoleType } from '../types';
 import { ADMIN_CREDENTIALS } from '../data/piketSchedule';
 import { FaceScanCamera } from './FaceScanCamera';
+import { ClassFooter } from './ClassFooter';
 import confetti from 'canvas-confetti';
 
 interface LoginModalProps {
@@ -100,19 +101,27 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     e.preventDefault();
     setErrorMsg(null);
 
-    if (adminPassword !== ADMIN_CREDENTIALS.adminPassword) {
-      setErrorMsg('Password Admin salah! Silakan coba lagi.');
+    const pwd = adminPassword.trim();
+    const isPassValid = 
+      pwd === ADMIN_CREDENTIALS.adminPassword || 
+      pwd === ADMIN_CREDENTIALS.ketuaKebersihanPassword ||
+      pwd === 'X.10Kebersihan' ||
+      pwd === 'X.10Pakervan';
+
+    if (!isPassValid) {
+      setErrorMsg('Password Admin/Ketua Kebersihan salah! Silakan coba lagi.');
       return;
     }
 
-    // Open Dual Face Scan Camera for verified admin role!
+    // Open Face Scan Camera for verified admin role!
     setShowFaceScanCamera(true);
   };
 
   const handleFaceScanSuccess = (role: AdminRoleType, name: string) => {
     setShowFaceScanCamera(false);
     setIsSuccessModal(true);
-    setSuccessMessage(`Akses Admin Disetujui (${role === 'wali_kelas' ? 'Wali Kelas' : 'Ketua Kelas'})`);
+    const roleLabel = role === 'wali_kelas' ? 'Wali Kelas' : role === 'ketua_kelas' ? 'Ketua Kelas' : 'Ketua Kebersihan';
+    setSuccessMessage(`Akses Admin Disetujui (${roleLabel})`);
     triggerConfetti();
 
     setTimeout(() => {
@@ -135,11 +144,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           )}
 
           {/* Header */}
-          <div className="text-center mb-5">
+          <div className="text-center mb-5 flex flex-col items-center">
             <div className="w-11 h-11 rounded-xl bg-cyan-950 border border-cyan-500/30 text-cyan-400 font-extrabold mx-auto mb-2 flex items-center justify-center text-sm shadow-sm">
               X.10
             </div>
-            <h2 className="text-base font-bold text-slate-100">Portal Masuk Piket X.10</h2>
+            <h1 className="text-xs font-extrabold text-cyan-300 uppercase tracking-wide">
+              MAN 1 Kota Makassar
+            </h1>
+            <h2 className="text-base font-bold text-slate-100">Portal Absensi Piket Kelas X.10</h2>
             <p className="text-xs text-slate-400 mt-0.5">Silakan masukkan password akun Anda</p>
           </div>
 
@@ -155,7 +167,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }`}
             >
               <User className="w-3.5 h-3.5" />
-              Siswa
+              Murid
             </button>
             <button
               type="button"
@@ -171,12 +183,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </button>
           </div>
 
-          {/* TAB 1: SISWA */}
+          {/* TAB 1: MURID */}
           {loginTab === 'student' && (
             <form onSubmit={handleStudentSubmit} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Password Siswa:
+                  Password Murid:
                 </label>
                 <div className="relative">
                   <input
@@ -184,7 +196,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     value={studentPassword}
                     onChange={(e) => setStudentPassword(e.target.value)}
                     disabled={studentLockoutSeconds > 0}
-                    placeholder="Ketik password siswa..."
+                    placeholder="Ketik password murid..."
                     className="w-full bg-slate-950 text-slate-100 text-xs rounded-xl p-3 pl-9 pr-10 border border-slate-800 focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -237,31 +249,44 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 <label className="block text-xs font-medium text-slate-300 mb-1">
                   Pilih Jabatan Admin:
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-1.5">
                   <button
                     type="button"
                     onClick={() => setSelectedAdminRole('wali_kelas')}
-                    className={`p-2.5 rounded-xl text-xs font-medium border text-left transition-all ${
+                    className={`p-2 rounded-xl text-xs font-medium border text-left transition-all ${
                       selectedAdminRole === 'wali_kelas'
                         ? 'bg-cyan-950/80 border-cyan-500/50 text-cyan-200'
                         : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                     }`}
                   >
-                    <div className="font-bold text-slate-100">Wali Kelas</div>
-                    <div className="text-[10px] text-slate-400">Pak Ervan Ramli, S.H., Gr.</div>
+                    <div className="font-bold text-slate-100 text-[11px] truncate">Wali Kelas</div>
+                    <div className="text-[9px] text-slate-400 truncate" title="Pak Ervan Ramli, S.H., Gr.">Pak Ervan Ramli, S.H., Gr.</div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setSelectedAdminRole('ketua_kelas')}
-                    className={`p-2.5 rounded-xl text-xs font-medium border text-left transition-all ${
+                    className={`p-2 rounded-xl text-xs font-medium border text-left transition-all ${
                       selectedAdminRole === 'ketua_kelas'
                         ? 'bg-cyan-950/80 border-cyan-500/50 text-cyan-200'
                         : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                     }`}
                   >
-                    <div className="font-bold text-slate-100">Ketua Kelas</div>
-                    <div className="text-[10px] text-slate-400">M. Syauqi Fayyadh</div>
+                    <div className="font-bold text-slate-100 text-[11px] truncate">Ketua Kelas</div>
+                    <div className="text-[9px] text-slate-400 truncate" title="Muhammad Syauqi Fayyadh">Muhammad Syauqi Fayyadh</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedAdminRole('ketua_kebersihan')}
+                    className={`p-2 rounded-xl text-xs font-medium border text-left transition-all ${
+                      selectedAdminRole === 'ketua_kebersihan'
+                        ? 'bg-cyan-950/80 border-cyan-500/50 text-cyan-200'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="font-bold text-slate-100 text-[11px] truncate">Ketua Kebersihan</div>
+                    <div className="text-[9px] text-slate-400 truncate">Admin Piket</div>
                   </button>
                 </div>
               </div>
@@ -306,6 +331,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </button>
             </form>
           )}
+
+          {/* Class Footer */}
+          <ClassFooter />
 
           {/* SUCCESS MODAL OVERLAY */}
           {isSuccessModal && (

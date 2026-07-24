@@ -112,7 +112,13 @@ export default function App() {
     setUserRole('admin');
     setAdminRoleType(roleType);
     setAdminName(name);
-    setAdminTitle(roleType === 'wali_kelas' ? 'Wali Kelas X.10' : 'Ketua Kelas X.10');
+    setAdminTitle(
+      roleType === 'wali_kelas'
+        ? 'Wali Kelas X.10'
+        : roleType === 'ketua_kelas'
+        ? 'Ketua Kelas X.10'
+        : 'Ketua Kebersihan X.10'
+    );
     setIsLoginModalOpen(false);
   };
 
