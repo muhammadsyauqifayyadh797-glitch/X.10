@@ -1,5 +1,5 @@
 {
-  "name": "Absensi Piket Kelas X.10 - Lautan",
+  "name": "piketX.10",
   "description": "Aplikasi Web Absensi Piket Kelas X.10 khusus HP Android dengan Filter Nama Harian Otomatis, Dual Scan Wajah Admin, dan Tema Lautan.",
   "requestFramePermissions": [
     "camera"
