@@ -134,15 +134,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         class: 'X.10'
       };
 
-      // no-cors fetch to bypass Google Apps Script CORS restrictions in browser
+      // no-cors fetch with text/plain header to bypass Google Apps Script CORS restrictions
       fetch(API_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'text/plain'
         },
         body: JSON.stringify(payload)
-      }).catch(err => console.warn('Apps Script fetch warning:', err));
+      })
+      .then(() => {
+        console.log('Absen berhasil dikirim!');
+      })
+      .catch(err => console.warn('Gagal mengirim data:', err));
 
     } catch (err) {
       console.warn('API error:', err);

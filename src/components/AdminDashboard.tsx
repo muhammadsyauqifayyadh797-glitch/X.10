@@ -63,10 +63,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         method: 'POST',
         mode: 'no-cors',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'text/plain'
         },
         body: JSON.stringify(payload)
-      }).catch(err => console.warn('Reset sync warning:', err));
+      })
+      .then(() => {
+        console.log('Reset command sent to Google Apps Script');
+      })
+      .catch(err => console.warn('Reset sync warning:', err));
     } catch (err) {
       console.warn('Reset error:', err);
     }
