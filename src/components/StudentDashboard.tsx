@@ -355,11 +355,22 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
           {/* Success Submission Alert */}
           {submitSuccess && (
-            <div className="p-3.5 rounded-2xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-200 text-xs font-bold flex items-center justify-center gap-2 animate-bounce">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              <span>Absen Piket Berhasil Terkirim ke Google Sheets!</span>
+            <div className="p-3.5 rounded-2xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-200 text-xs font-bold flex flex-col items-center justify-center gap-1 animate-bounce text-center">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                <span>Absen Piket Berhasil Terkirim!</span>
+              </div>
+              <p className="text-[10px] text-emerald-300/90 font-medium">
+                Bukti foto langsung masuk ke Admin (Wali Kelas / Ketua Kelas) dengan status Pending.
+              </p>
             </div>
           )}
+
+          {/* Info Realtime Admin Sync */}
+          <div className="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-500/20 text-[11px] text-cyan-200 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>Foto piket yang Anda kirim akan langsung masuk secara real-time ke Admin untuk diverifikasi (ACC).</span>
+          </div>
 
           {/* SUBMIT BUTTON */}
           <button

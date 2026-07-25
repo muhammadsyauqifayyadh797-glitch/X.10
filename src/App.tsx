@@ -21,56 +21,23 @@ export default function App() {
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
 
-  // Persistent attendance records state
+  // Persistent attendance records state (100% real-time, no fake/demo trial data)
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed: AttendanceRecord[] = JSON.parse(saved);
+        // Remove any old mock/demo trial records (e.g. DEMO_1, DEMO_2)
+        const realRecords = parsed.filter(r => r.id && !r.id.startsWith('DEMO_'));
+        return realRecords;
       }
     } catch (e) {
       console.error('Failed to load from storage:', e);
     }
-
-    // Default mock sample data for class X.10 preview
-    return [
-      {
-        id: 'DEMO_1',
-        studentName: 'NUR HAFIZAH F.F',
-        day: 'Senin',
-        dateStr: 'Senin, 24 Juli 2026',
-        timestamp: '06:45:10 WITA',
-        photoUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=400&q=80',
-        alreadyClean: true,
-        status: 'ACC',
-        syncedToAppsScript: true
-      },
-      {
-        id: 'DEMO_2',
-        studentName: 'Althafunnizza Asyara Said',
-        day: 'Senin',
-        dateStr: 'Senin, 24 Juli 2026',
-        timestamp: '06:50:22 WITA',
-        photoUrl: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&w=400&q=80',
-        alreadyClean: true,
-        status: 'ACC',
-        syncedToAppsScript: true
-      },
-      {
-        id: 'DEMO_3',
-        studentName: 'Fathullah Rizqi M.',
-        day: 'Senin',
-        dateStr: 'Senin, 24 Juli 2026',
-        timestamp: '07:02:15 WITA',
-        photoUrl: 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=400&q=80',
-        alreadyClean: true,
-        status: 'Pending',
-        syncedToAppsScript: true
-      }
-    ];
+    return [];
   });
 
-  // Save to localStorage
+  // Save to localStorage & notify other components/tabs
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(attendanceRecords));
@@ -78,6 +45,24 @@ export default function App() {
       console.error('Failed to save to storage:', e);
     }
   }, [attendanceRecords]);
+
+  // Real-time synchronization across browser tabs/windows
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          const updated: AttendanceRecord[] = JSON.parse(e.newValue);
+          const cleanUpdated = updated.filter(r => r.id && !r.id.startsWith('DEMO_'));
+          setAttendanceRecords(cleanUpdated);
+        } catch (err) {
+          console.error('Storage sync error:', err);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const handleAddRecord = (newRecord: AttendanceRecord) => {
     setAttendanceRecords(prev => [newRecord, ...prev]);

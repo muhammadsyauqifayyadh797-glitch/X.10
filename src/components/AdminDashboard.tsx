@@ -22,6 +22,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onLogout
 }) => {
   const [selectedDayFilter, setSelectedDayFilter] = useState<DayOfWeek | 'Semua'>('Semua');
+  const [statusFilter, setStatusFilter] = useState<'Semua' | 'Pending' | 'ACC' | 'Tolak'>('Semua');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
@@ -37,8 +38,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Filter records
   const filteredRecords = attendanceRecords.filter(r => {
     const matchDay = selectedDayFilter === 'Semua' || r.day === selectedDayFilter;
+    const matchStatus = statusFilter === 'Semua' || r.status === statusFilter;
     const matchSearch = r.studentName.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchDay && matchSearch;
+    return matchDay && matchStatus && matchSearch;
   });
 
   const handleConfirmReject = () => {
@@ -128,24 +130,64 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </div>
 
+      {/* PENDING NOTIFICATION BANNER */}
+      {pendingCount > 0 && (
+        <div 
+          onClick={() => setStatusFilter('Pending')}
+          className="ocean-glass-card rounded-3xl p-3.5 mb-4 border-2 border-amber-400/80 bg-amber-950/40 cursor-pointer hover:bg-amber-900/50 transition-all flex items-center justify-between gap-2 shadow-[0_0_20px_rgba(251,191,36,0.2)] animate-pulse"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-300 font-black text-xs shrink-0">
+              {pendingCount}
+            </div>
+            <div>
+              <p className="text-xs font-black text-amber-200">Ada Bukti Piket Murid Menunggu ACC!</p>
+              <p className="text-[10px] text-amber-300/80 font-medium">Klik di sini untuk meninjau foto & setujui (ACC)</p>
+            </div>
+          </div>
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-500 text-slate-950 whitespace-nowrap">
+            Tinjau ({pendingCount})
+          </span>
+        </div>
+      )}
+
       {/* QUICK STATS CARDS */}
       <div className="grid grid-cols-4 gap-1.5 mb-4">
-        <div className="p-2.5 rounded-2xl bg-slate-900/80 border border-cyan-500/20 text-center">
+        <button 
+          type="button"
+          onClick={() => setStatusFilter('Semua')}
+          className={`p-2.5 rounded-2xl border text-center transition-all ${statusFilter === 'Semua' ? 'bg-cyan-950/90 border-cyan-400 ring-1 ring-cyan-400' : 'bg-slate-900/80 border-cyan-500/20'}`}
+        >
           <p className="text-[10px] text-slate-400 font-bold uppercase">Total</p>
           <p className="text-sm font-black text-slate-100">{totalCount}</p>
-        </div>
-        <div className="p-2.5 rounded-2xl bg-emerald-950/60 border border-emerald-500/30 text-center">
+        </button>
+
+        <button 
+          type="button"
+          onClick={() => setStatusFilter('ACC')}
+          className={`p-2.5 rounded-2xl border text-center transition-all ${statusFilter === 'ACC' ? 'bg-emerald-950/90 border-emerald-400 ring-1 ring-emerald-400' : 'bg-emerald-950/60 border-emerald-500/30'}`}
+        >
           <p className="text-[10px] text-emerald-400 font-bold uppercase">ACC</p>
           <p className="text-sm font-black text-emerald-300">{accCount}</p>
-        </div>
-        <div className="p-2.5 rounded-2xl bg-amber-950/60 border border-amber-500/30 text-center">
+        </button>
+
+        <button 
+          type="button"
+          onClick={() => setStatusFilter('Pending')}
+          className={`p-2.5 rounded-2xl border text-center transition-all ${statusFilter === 'Pending' ? 'bg-amber-950/90 border-amber-400 ring-1 ring-amber-400' : 'bg-amber-950/60 border-amber-500/30'}`}
+        >
           <p className="text-[10px] text-amber-400 font-bold uppercase">Pending</p>
           <p className="text-sm font-black text-amber-300">{pendingCount}</p>
-        </div>
-        <div className="p-2.5 rounded-2xl bg-rose-950/60 border border-rose-500/30 text-center">
+        </button>
+
+        <button 
+          type="button"
+          onClick={() => setStatusFilter('Tolak')}
+          className={`p-2.5 rounded-2xl border text-center transition-all ${statusFilter === 'Tolak' ? 'bg-rose-950/90 border-rose-400 ring-1 ring-rose-400' : 'bg-rose-950/60 border-rose-500/30'}`}
+        >
           <p className="text-[10px] text-rose-400 font-bold uppercase">Ditolak</p>
           <p className="text-sm font-black text-rose-300">{tolakCount}</p>
-        </div>
+        </button>
       </div>
 
       {/* ACTION CONTROLS & FILTER */}
@@ -175,6 +217,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               }`}
             >
               {day}
+            </button>
+          ))}
+        </div>
+
+        {/* Status Filter Pills */}
+        <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar pt-0.5">
+          {(['Semua', 'Pending', 'ACC', 'Tolak'] as const).map((st) => (
+            <button
+              key={st}
+              onClick={() => setStatusFilter(st)}
+              className={`px-3 py-1 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all ${
+                statusFilter === st
+                  ? st === 'ACC'
+                    ? 'bg-emerald-500 text-slate-950 font-black'
+                    : st === 'Pending'
+                    ? 'bg-amber-500 text-slate-950 font-black'
+                    : st === 'Tolak'
+                    ? 'bg-rose-500 text-white font-black'
+                    : 'bg-cyan-500 text-slate-950 font-black'
+                  : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800/80'
+              }`}
+            >
+              Status: {st}
             </button>
           ))}
         </div>
