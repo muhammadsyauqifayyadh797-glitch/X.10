@@ -446,8 +446,24 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT APP ENGINE -->
-  <script>
+  <!-- JAVASCRIPT APP ENGINE WITH FIREBASE FIRESTORE REAL-TIME SYNC -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      projectId: "modified-depth-51ttq",
+      appId: "1:548210408053:web:25dc8b035627b61382163c",
+      apiKey: "AIzaSyDqi7Gp55Rm0SCG26PyhYiAk6zRcY2rR9o",
+      authDomain: "modified-depth-51ttq.firebaseapp.com",
+      firestoreDatabaseId: "ai-studio-absensipiketkela-8311e556-125a-4601-a095-099c889a47e9",
+      storageBucket: "modified-depth-51ttq.firebasestorage.app",
+      messagingSenderId: "548210408053"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
     // SCHEDULE DATA CLASS X.10 MAN 1 KOTA MAKASSAR
     const PIKET_SCHEDULE = {
       'Senin': [
@@ -507,17 +523,40 @@
     let studentCameraStream = null;
     let faceCameraStream = null;
     let selectedAdminRole = 'wali'; // 'wali' | 'ketua'
-    let currentAdminLoggedIn = null; // null | 'Pak Ervan Ramli, S.H., Gr.' | 'Muhammad Syauqi Fayyadh'
+    let currentAdminLoggedIn = null;
     let adminDayFilter = 'Semua';
     let adminStatusFilter = 'Semua';
+    let liveRecords = [];
 
     // INITIALIZATION ON PAGE LOAD
     window.addEventListener('DOMContentLoaded', () => {
       initClock();
       determineTodayDay();
       updateStudentSelectOptions();
-      renderAdminRecords();
+      initFirebaseRealtimeSync();
     });
+
+    function initFirebaseRealtimeSync() {
+      try {
+        const q = query(collection(db, 'attendance_records'), orderBy('createdAt', 'desc'));
+        onSnapshot(q, (snapshot) => {
+          liveRecords = snapshot.docs.map(docSnap => ({
+            id: docSnap.id,
+            ...docSnap.data()
+          }));
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(liveRecords));
+          renderAdminRecords();
+        }, (err) => {
+          console.warn('Firebase snapshot listener fallback to localStorage:', err);
+          liveRecords = getStoredRecords();
+          renderAdminRecords();
+        });
+      } catch (err) {
+        console.warn('Firebase init fallback:', err);
+        liveRecords = getStoredRecords();
+        renderAdminRecords();
+      }
+    }
 
     // CLOCK & DATE
     function initClock() {
@@ -668,6 +707,16 @@
         status: 'Pending'
       };
 
+      // Save to Firebase Firestore & LocalStorage
+      try {
+        setDoc(doc(db, 'attendance_records', newRecord.id), {
+          ...newRecord,
+          createdAt: serverTimestamp()
+        }).catch(err => console.error('Firebase save error:', err));
+      } catch (err) {
+        console.error('Firebase setDoc error:', err);
+      }
+
       // Get existing
       const existing = getStoredRecords();
       existing.unshift(newRecord);
@@ -680,12 +729,15 @@
       document.getElementById('cameraPlaceholder').classList.remove('hidden');
 
       // Trigger Success Animation Overlay
-      showSuccessOverlay('Absen Berhasil Kirim!', 'Foto bukti sudah tersimpan & masuk ke Admin untuk di-ACC.');
+      showSuccessOverlay('Absen Berhasil Kirim!', 'Foto bukti sudah tersimpan ke Firebase & masuk ke Admin.');
 
       renderAdminRecords();
     }
 
     function getStoredRecords() {
+      if (liveRecords && liveRecords.length > 0) {
+        return liveRecords;
+      }
       try {
         const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
         return saved ? JSON.parse(saved) : [];
@@ -920,14 +972,32 @@
     }
 
     function updateRecordStatus(id, newStatus) {
+      try {
+        updateDoc(doc(db, 'attendance_records', id), {
+          status: newStatus
+        }).catch(err => console.error('Firebase update error:', err));
+      } catch (err) {
+        console.error('Firebase updateDoc error:', err);
+      }
+
       const records = getStoredRecords();
       const updated = records.map(r => r.id === id ? { ...r, status: newStatus } : r);
+      liveRecords = updated;
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
       renderAdminRecords();
     }
 
-    function resetAllData() {
+    async function resetAllData() {
       if (confirm('YAKIN INGIN MENGHAPUS SEMUA DATA ABSENSI PIKET?')) {
+        try {
+          const snapshot = await getDocs(collection(db, 'attendance_records'));
+          const promises = snapshot.docs.map(docSnap => deleteDoc(doc(db, 'attendance_records', docSnap.id)));
+          await Promise.all(promises);
+        } catch (err) {
+          console.error('Firebase reset error:', err);
+        }
+
+        liveRecords = [];
         localStorage.removeItem(LOCAL_STORAGE_KEY);
         renderAdminRecords();
         alert('Semua data absensi berhasil dibersihkan.');

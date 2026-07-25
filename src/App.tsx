@@ -9,7 +9,19 @@ import { StudentDashboard } from './components/StudentDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginModal } from './components/LoginModal';
 import { AttendanceRecord, ApprovalStatus, UserRole, AdminRoleType } from './types';
-import { ADMIN_CREDENTIALS } from './data/piketSchedule';
+import { db } from './lib/firebase';
+import { 
+  collection, 
+  onSnapshot, 
+  doc, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  getDocs, 
+  query, 
+  orderBy,
+  serverTimestamp 
+} from 'firebase/firestore';
 
 const STORAGE_KEY = 'X10_PIKET_ATTENDANCE_V1';
 
@@ -21,54 +33,78 @@ export default function App() {
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
 
-  // Persistent attendance records state (100% real-time, no fake/demo trial data)
+  // Attendance records state backed by Firebase Firestore + LocalStorage fallback
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed: AttendanceRecord[] = JSON.parse(saved);
-        // Remove any old mock/demo trial records (e.g. DEMO_1, DEMO_2)
-        const realRecords = parsed.filter(r => r.id && !r.id.startsWith('DEMO_'));
-        return realRecords;
+        return parsed.filter(r => r.id && !r.id.startsWith('DEMO_'));
       }
     } catch (e) {
-      console.error('Failed to load from storage:', e);
+      console.error('Failed to load initial storage:', e);
     }
     return [];
   });
 
-  // Save to localStorage & notify other components/tabs
+  // Real-time synchronization with Firebase Firestore
   useEffect(() => {
+    let unsubscribe: () => void = () => {};
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(attendanceRecords));
-    } catch (e) {
-      console.error('Failed to save to storage:', e);
-    }
-  }, [attendanceRecords]);
+      const recordsCol = collection(db, 'attendance_records');
+      const q = query(recordsCol, orderBy('createdAt', 'desc'));
+      
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const fetchedRecords: AttendanceRecord[] = snapshot.docs.map(docSnap => {
+          const data = docSnap.data();
+          return {
+            id: docSnap.id,
+            studentName: data.studentName || '',
+            day: data.day || 'Senin',
+            dateStr: data.dateStr || '',
+            timestamp: data.timestamp || '',
+            photoUrl: data.photoUrl || '',
+            alreadyClean: Boolean(data.alreadyClean),
+            status: data.status || 'Pending',
+            syncedToAppsScript: Boolean(data.syncedToAppsScript),
+            rejectionReason: data.rejectionReason || undefined
+          } as AttendanceRecord;
+        });
 
-  // Real-time synchronization across browser tabs/windows
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && e.newValue) {
+        const cleanRecords = fetchedRecords.filter(r => r.id && !r.id.startsWith('DEMO_'));
+        setAttendanceRecords(cleanRecords);
         try {
-          const updated: AttendanceRecord[] = JSON.parse(e.newValue);
-          const cleanUpdated = updated.filter(r => r.id && !r.id.startsWith('DEMO_'));
-          setAttendanceRecords(cleanUpdated);
-        } catch (err) {
-          console.error('Storage sync error:', err);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanRecords));
+        } catch (e) {
+          console.error('LocalStorage write error:', e);
         }
-      }
-    };
+      }, (error) => {
+        console.error('Firestore snapshot listener error:', error);
+      });
+    } catch (err) {
+      console.error('Firestore setup error:', err);
+    }
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
-  const handleAddRecord = (newRecord: AttendanceRecord) => {
-    setAttendanceRecords(prev => [newRecord, ...prev]);
+  const handleAddRecord = async (newRecord: AttendanceRecord) => {
+    setAttendanceRecords(prev => [newRecord, ...prev.filter(r => r.id !== newRecord.id)]);
+    
+    try {
+      const docRef = doc(db, 'attendance_records', newRecord.id);
+      await setDoc(docRef, {
+        ...newRecord,
+        createdAt: serverTimestamp()
+      });
+    } catch (err) {
+      console.error('Error saving record to Firebase:', err);
+    }
   };
 
-  const handleUpdateStatus = (id: string, status: ApprovalStatus, rejectionReason?: string) => {
+  const handleUpdateStatus = async (id: string, status: ApprovalStatus, rejectionReason?: string) => {
     setAttendanceRecords(prev =>
       prev.map(rec => {
         if (rec.id === id) {
@@ -81,10 +117,28 @@ export default function App() {
         return rec;
       })
     );
+
+    try {
+      const docRef = doc(db, 'attendance_records', id);
+      await updateDoc(docRef, {
+        status,
+        rejectionReason: status === 'Tolak' ? rejectionReason : null
+      });
+    } catch (err) {
+      console.error('Error updating status in Firebase:', err);
+    }
   };
 
-  const handleResetData = () => {
+  const handleResetData = async () => {
     setAttendanceRecords([]);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      const snapshot = await getDocs(collection(db, 'attendance_records'));
+      const deletePromises = snapshot.docs.map(docSnap => deleteDoc(doc(db, 'attendance_records', docSnap.id)));
+      await Promise.all(deletePromises);
+    } catch (err) {
+      console.error('Error resetting Firebase collection:', err);
+    }
   };
 
   const handleSuccessStudentLogin = () => {

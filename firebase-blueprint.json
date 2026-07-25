@@ -1,0 +1,21 @@
+{
+  "entities": {
+    "attendance_records": {
+      "title": "Attendance Records",
+      "description": "Records of student piket attendance with photos and status",
+      "type": "object",
+      "properties": {
+        "studentName": { "type": "string" },
+        "day": { "type": "string" },
+        "dateStr": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "alreadyClean": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["Pending", "ACC", "Tolak"] },
+        "syncedToAppsScript": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentName", "day", "dateStr", "timestamp", "photoUrl", "alreadyClean", "status"]
+    }
+  }
+}
